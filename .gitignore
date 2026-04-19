@@ -1,0 +1,17 @@
+# Quarto output
+_site/
+.quarto/
+
+# R / Python notebooks (optional, depending on your setup)
+*.Rproj
+.Rhistory
+.Rdata
+.Ruserdata
+pycache/
+*.pyc
+
+# macOS junk
+.DS_Store
+
+# Logs
+*.log
