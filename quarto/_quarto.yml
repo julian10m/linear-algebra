@@ -1,0 +1,25 @@
+project:
+  type: book
+
+book:
+  title: "Linear Algebra is fun"
+  author: "Julian M. Del Fiore"
+  date: "4/19/2026"
+  chapters:
+    - index.qmd
+    - intro.qmd
+    - summary.qmd
+    - references.qmd
+
+bibliography: references.bib
+
+format:
+  html:
+    theme:
+      - cosmo
+      - brand
+  pdf:
+    documentclass: scrreprt
+
+
+

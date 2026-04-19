@@ -1,0 +1,76 @@
+## Hyperplanes 
+
+## Planes in 3D
+
+In $\mathbb{R}^3$, a plane is a collection of points lying on a flat surface. 
+If the plane passes through the origin, then it forms a subspace.
+
+Given two linearly independent vectors $u$ and $v$, we can linearly combine them to generate a plane $\Pi$ 
+$$
+\Pi = \{ x \mid x = \alpha u + \beta v,\; \alpha, \beta \in \mathbb{R} \}
+$$
+
+It thus holds that $\Pi = \text{span}\{u, v\}$, and the plane is oriented in the directions of $u$ and $v$.
+
+For any plane, there exists a normal vector $N$ such that for any point $p \in \Pi$:
+
+$$N \cdot p = 0$$
+
+This means that $N$ is orthogonal to every vector in $\Pi$, typically written as $N \perp \Pi$.
+In $\mathbb{R}^3$, since $p \in \text{span}\{u, v\}$, we can define the normal vector as $N = u \times v$.
+This way, by construction, $N$ is orthogonal to both $u$ and $v$.
+
+If we write $N = \begin{pmatrix} a \\ b \\ c \end{pmatrix}$ and $p = \begin{pmatrix} x \\ y \\ z \end{pmatrix}$, then the condition $N \cdot p = 0$ becomes:
+
+$$
+ax + by + cz = 0
+$$
+
+This is the Cartesian equation of the plane.
+
+We have one equation with three unknowns, so the solution space is two-dimensional.
+This is consistent with our initial description saying that $\Pi \in \text{span}\{u, v\}$.
+In particular, we can isolate $z$ in the cartesian form and re-write $p$, to prove that $u = \begin{pmatrix} 1 \\ 0 \\ -\frac{a}{c}\end{pmatrix}$ and $v = \begin{pmatrix} 0 \\ 1 \\ -\frac{b}{c}\end{pmatrix}$.
+
+
+## Uncentered 3D-planes 
+
+In the most general case, we can explicitly highlight that plane $\Pi$ passes through point $p_0$
+
+$$
+\Pi = \{ x \mid x = p_0 + \alpha u + \beta v,\; \alpha, \beta \in \mathbb{R} \}
+$$
+
+If $p_0 \notin \text{span}\{u, v\}$, then we have a plane that does not cross the origin anymore.
+
+To account for the existence of $p_0$ in our previous formulas, we only need to make an affine transformation.
+We will now have
+
+$$N \cdot (p - p_0) = 0$$
+
+which highlights that $N$ is orthogonal to any direction contained in $\Pi$.
+Moreover, we now have $N \cdot P = N \cdot p_0$, so then the cartesian equation becomes
+
+$$
+\Pi: ax + by + cz + d = 0
+$$
+
+where $d = - N \cdot p_0$.
+As we will explore later, $d$ is proportional to the distance from the plane to the origin.
+
+## Hyperplanes
+
+In $\mathbb{R}^n$, we define an hyperplane following a similar idea:
+
+$$
+N \cdot (p - p_0) = 0
+$$
+
+We now have $n$ unknowns, and for $N = \begin{pmatrix}a_1 \\ \vdots \\ a_n \end{pmatrix}$ it holds that:
+
+$$a_1 x_1 + a_2 x_2 + \dots + a_n x_n + d = 0$$
+
+Since one linear constraint is imposed, the hyperplane lives in a space of dimension n - 1.
+Similar to before, $N$ is orthogonal to the hyperplane.
+ 
+$$\text{dist}(x, \Pi) = \frac{|N \cdot x + d|}{\|N\|}$$
