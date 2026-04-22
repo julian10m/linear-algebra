@@ -1,0 +1,399 @@
+```{ojs}
+//| echo: false
+
+{
+  const THREE = await import("https://esm.sh/three@0.155.0");
+  const { OrbitControls } = await import("https://esm.sh/three@0.155.0/examples/jsm/controls/OrbitControls");
+
+  function sphericalToUnit(theta, phi) {
+    return new THREE.Vector3(
+      Math.sin(phi) * Math.cos(theta),
+      Math.sin(phi) * Math.sin(theta),
+      Math.cos(phi)
+    ).normalize();
+  }
+
+  function fmt(x) {
+    const y = Math.abs(x) < 1e-10 ? 0 : x;
+    return y.toFixed(2);
+  }
+
+  function slider(min, max, step, value) {
+    const el = document.createElement("input");
+    el.type = "range";
+    el.min = String(min);
+    el.max = String(max);
+    el.step = String(step);
+    el.value = String(value);
+    el.style.width = "100%";
+    return el;
+  }
+
+  function makeSliderRow(labelText, input) {
+    const row = document.createElement("div");
+    row.style.marginBottom = "10px";
+
+    const label = document.createElement("label");
+    label.style.display = "grid";
+    label.style.gridTemplateColumns = "36px 1fr 56px";
+    label.style.gap = "10px";
+    label.style.alignItems = "center";
+
+    const name = document.createElement("span");
+    name.textContent = labelText;
+
+    const value = document.createElement("span");
+    value.style.fontFamily = "monospace";
+    value.style.fontSize = "12px";
+    value.textContent = input.value;
+
+    input.addEventListener("input", () => {
+      value.textContent = input.value;
+    });
+
+    label.appendChild(name);
+    label.appendChild(input);
+    label.appendChild(value);
+    row.appendChild(label);
+
+    return row;
+  }
+
+  const wrapper = document.createElement("div");
+  wrapper.style.width = "100%";
+  wrapper.style.margin = "1rem 0";
+
+  const panel = document.createElement("div");
+  panel.style.fontFamily = "sans-serif";
+  panel.style.fontSize = "14px";
+  panel.style.lineHeight = "1.45";
+  panel.style.marginBottom = "14px";
+  panel.style.maxWidth = "520px";
+  panel.style.margin = "0 auto 14px auto";
+
+  const title = document.createElement("h4");
+  title.textContent = "Interactive plane";
+  title.style.margin = "0 0 10px 0";
+  panel.appendChild(title);
+
+  const controlsGrid = document.createElement("div");
+  controlsGrid.style.display = "grid";
+  controlsGrid.style.gridTemplateColumns = "repeat(3, minmax(180px, 1fr))";
+  controlsGrid.style.gap = "12px";
+  controlsGrid.style.marginBottom = "12px";
+
+  const p0x = slider(-2, 2, 0.01, 0.00);
+  const p0y = slider(-2, 2, 0.01, 0.00);
+  const p0z = slider(-2, 2, 0.01, 0.00);
+
+  controlsGrid.appendChild(makeSliderRow("p₀x", p0x));
+  controlsGrid.appendChild(makeSliderRow("p₀y", p0y));
+  controlsGrid.appendChild(makeSliderRow("p₀z", p0z));
+  panel.appendChild(controlsGrid);
+
+  const note = document.createElement("div");
+  note.style.color = "#555";
+  note.style.marginBottom = "12px";
+  note.innerHTML =
+    "The camera is fixed. Drag the plane to rotate it, and use the sliders to move <strong>p₀</strong>. The red and blue arrows show the two direction vectors, and the black arrow shows the normal, all drawn from the same base corner of the plane.";
+  panel.appendChild(note);
+
+  const eqn = document.createElement("div");
+  eqn.style.padding = "10px 12px";
+  eqn.style.border = "1px solid #ddd";
+  eqn.style.borderRadius = "8px";
+  eqn.style.background = "#fafafa";
+  eqn.style.fontFamily = "monospace";
+  eqn.style.fontSize = "13px";
+  eqn.style.marginBottom = "14px";
+  panel.appendChild(eqn);
+
+  const canvasHost = document.createElement("div");
+  canvasHost.style.width = "100%";
+  canvasHost.style.maxWidth = "620px";
+  canvasHost.style.aspectRatio = "2 / 1";
+  canvasHost.style.margin = "0 auto";
+  canvasHost.style.border = "1px solid #ddd";
+  canvasHost.style.borderRadius = "10px";
+  canvasHost.style.background = "white";
+
+  wrapper.appendChild(panel);
+  wrapper.appendChild(canvasHost);
+
+  const scene = new THREE.Scene();
+  scene.background = new THREE.Color(0xffffff);
+  scene.up.set(0, 0, 1);
+
+  const camera = new THREE.OrthographicCamera(-3.6, 3.6, 2.8, -2.8, 0.1, 100);
+  camera.position.set(3.5, -3.5, 2.8);
+  camera.up.set(0, 0, 1);
+  camera.lookAt(0, 0, 0);
+
+  const renderer = new THREE.WebGLRenderer({ antialias: true });
+  renderer.setPixelRatio(window.devicePixelRatio || 1);
+  const w = canvasHost.clientWidth || 900;
+  const h = canvasHost.clientHeight || (w * 0.4);
+  renderer.setSize(w, h, false);
+  canvasHost.appendChild(renderer.domElement);
+  renderer.domElement.style.width = "100%";
+  renderer.domElement.style.height = "100%";
+  renderer.domElement.style.display = "block";
+
+  const controls = new OrbitControls(camera, renderer.domElement);
+  controls.enableDamping = false;
+  controls.enableRotate = false;
+  controls.enablePan = false;
+  controls.enableZoom = false;
+
+  scene.add(new THREE.AmbientLight(0xffffff, 0.95));
+  const light = new THREE.DirectionalLight(0xffffff, 0.85);
+  light.position.set(4, 5, 3);
+  scene.add(light);
+
+  const grid = new THREE.GridHelper(10, 10, 0xcccccc, 0xeeeeee);
+  grid.rotation.x = Math.PI / 2;
+  scene.add(grid);
+
+  const axesGroup = new THREE.Group();
+  const axisLen = 2.6;
+
+  function makeAxisLine(dir) {
+    const points = [new THREE.Vector3(0, 0, 0), dir.clone().multiplyScalar(axisLen)];
+    const geom = new THREE.BufferGeometry().setFromPoints(points);
+    return new THREE.Line(geom, new THREE.LineBasicMaterial({ color: 0x444444 }));
+  }
+
+  axesGroup.add(makeAxisLine(new THREE.Vector3(1, 0, 0)));
+  axesGroup.add(makeAxisLine(new THREE.Vector3(0, 1, 0)));
+  axesGroup.add(makeAxisLine(new THREE.Vector3(0, 0, 1)));
+  scene.add(axesGroup);
+
+  const origin = new THREE.Vector3(0, 0, 0);
+  let isDraggingPlane = false;
+  let lastPointerX = 0;
+  let lastPointerY = 0;
+  const raycaster = new THREE.Raycaster();
+  const pointer = new THREE.Vector2();
+
+  function pointerToNDC(event) {
+    const rect = renderer.domElement.getBoundingClientRect();
+    pointer.x = ((event.clientX - rect.left) / rect.width) * 2 - 1;
+    pointer.y = -((event.clientY - rect.top) / rect.height) * 2 + 1;
+  }
+
+
+  renderer.domElement.addEventListener("pointerdown", (event) => {
+    pointerToNDC(event);
+    raycaster.setFromCamera(pointer, camera);
+    const hits = raycaster.intersectObject(plane, false);
+    if (hits.length > 0) {
+      isDraggingPlane = true;
+      lastPointerX = event.clientX;
+      lastPointerY = event.clientY;
+      renderer.domElement.setPointerCapture(event.pointerId);
+    }
+  });
+
+  renderer.domElement.addEventListener("pointermove", (event) => {
+    if (!isDraggingPlane) return;
+
+    const dx = event.clientX - lastPointerX;
+    const dy = event.clientY - lastPointerY;
+    lastPointerX = event.clientX;
+    lastPointerY = event.clientY;
+
+    rotY += dx * 0.008;
+    rotX += dy * 0.008;
+
+    const limit = Math.PI / 2 - 0.05;
+    rotX = Math.max(-limit, Math.min(limit, rotX));
+
+    updateScene();
+  });
+
+  renderer.domElement.addEventListener("pointerup", (event) => {
+    if (isDraggingPlane) {
+      isDraggingPlane = false;
+      renderer.domElement.releasePointerCapture(event.pointerId);
+    }
+  });
+
+  function makeArrow(color) {
+    return new THREE.ArrowHelper(
+      new THREE.Vector3(1, 0, 0),
+      origin,
+      0.9,
+      color,
+      0.14,
+      0.07
+    );
+  }
+
+  const arrowU = makeArrow(0xd62728);
+  const arrowV = makeArrow(0x1f77b4);
+  const arrowN = makeArrow(0x111111);
+  scene.add(arrowU, arrowV, arrowN);
+
+  const p0Marker = new THREE.Mesh(
+    new THREE.SphereGeometry(0.07, 24, 24),
+    new THREE.MeshStandardMaterial({ color: 0x2ca02c })
+  );
+  scene.add(p0Marker);
+
+  const baseMarker = new THREE.Mesh(
+    new THREE.SphereGeometry(0.06, 20, 20),
+    new THREE.MeshStandardMaterial({ color: 0x444444 })
+  );
+  scene.add(baseMarker);
+
+  const planeGeom = new THREE.BufferGeometry();
+  const plane = new THREE.Mesh(
+    planeGeom,
+    new THREE.MeshStandardMaterial({
+      color: 0x66c2a5,
+      transparent: true,
+      opacity: 0.5,
+      side: THREE.DoubleSide
+    })
+  );
+  scene.add(plane);
+
+  const planeEdge = new THREE.LineLoop(
+    new THREE.BufferGeometry(),
+    new THREE.LineBasicMaterial({ color: 0x666666 })
+  );
+  scene.add(planeEdge);
+
+  const u0 = new THREE.Vector3(1, 0, 0);
+  const v0 = new THREE.Vector3(0, 1, 0);
+  let rotY = 0;
+  let rotX = 0;
+  let u = u0.clone();
+  let v = v0.clone();
+
+  function getP0() {
+    return new THREE.Vector3(
+      parseFloat(p0x.value),
+      parseFloat(p0y.value),
+      parseFloat(p0z.value)
+    );
+  }
+
+  function currentNormalRaw() {
+    return new THREE.Vector3().crossVectors(u, v);
+  }
+
+  function updateArrow(arrow, dir, base, len) {
+    arrow.position.copy(base);
+    arrow.setDirection(dir.clone().normalize());
+    arrow.setLength(len, 0.16, 0.08);
+  }
+
+
+  function updateScene() {
+    const p0 = getP0();
+
+    const qy = new THREE.Quaternion().setFromAxisAngle(new THREE.Vector3(0, 1, 0), rotY);
+    const qx = new THREE.Quaternion().setFromAxisAngle(new THREE.Vector3(1, 0, 0), rotX);
+    const q = qy.clone().multiply(qx);
+
+    u = u0.clone().applyQuaternion(q).normalize();
+    v = v0.clone().applyQuaternion(q).normalize();
+
+    const nRaw = currentNormalRaw();
+    const norm = nRaw.length();
+
+    p0Marker.position.copy(p0);
+
+    if (norm < 1e-6) {
+      arrowN.visible = false;
+      plane.visible = false;
+      planeEdge.visible = false;
+      eqn.innerHTML = "Degenerate case: u and v are parallel.";
+      return;
+    }
+
+    const n = nRaw.clone().normalize();
+    let uRect = u.clone().normalize();
+    let vRect = v.clone().sub(uRect.clone().multiplyScalar(v.dot(uRect)));
+    if (vRect.length() < 1e-6) {
+      vRect = new THREE.Vector3().crossVectors(n, uRect);
+    }
+    vRect.normalize();
+
+    const s = 1.35;
+    const base = p0.clone().add(uRect.clone().multiplyScalar(-s)).add(vRect.clone().multiplyScalar(-s));
+
+    updateArrow(arrowU, uRect, base, 0.9);
+    updateArrow(arrowV, vRect, base, 0.9);
+    updateArrow(arrowN, n, base, 0.9);
+    baseMarker.position.copy(base);
+    arrowN.visible = true;
+    plane.visible = true;
+    planeEdge.visible = true;
+
+    const a = p0.clone().add(uRect.clone().multiplyScalar( s)).add(vRect.clone().multiplyScalar( s));
+    const b = p0.clone().add(uRect.clone().multiplyScalar( s)).add(vRect.clone().multiplyScalar(-s));
+    const c = p0.clone().add(uRect.clone().multiplyScalar(-s)).add(vRect.clone().multiplyScalar(-s));
+    const d = p0.clone().add(uRect.clone().multiplyScalar(-s)).add(vRect.clone().multiplyScalar( s));
+
+    const verts = new Float32Array([
+      a.x,a.y,a.z,  b.x,b.y,b.z,  d.x,d.y,d.z,
+      b.x,b.y,b.z,  c.x,c.y,c.z,  d.x,d.y,d.z
+    ]);
+    planeGeom.setAttribute("position", new THREE.BufferAttribute(verts, 3));
+    planeGeom.computeVertexNormals();
+
+    const edgeVerts = new Float32Array([
+      a.x,a.y,a.z,
+      b.x,b.y,b.z,
+      c.x,c.y,c.z,
+      d.x,d.y,d.z
+    ]);
+    planeEdge.geometry.dispose();
+    planeEdge.geometry = new THREE.BufferGeometry();
+    planeEdge.geometry.setAttribute("position", new THREE.BufferAttribute(edgeVerts, 3));
+
+    const aa = n.x;
+    const bb = n.y;
+    const cc = n.z;
+    const dd = -(aa * p0.x + bb * p0.y + cc * p0.z);
+
+    eqn.innerHTML =
+      `u = (${fmt(uRect.x)}, ${fmt(uRect.y)}, ${fmt(uRect.z)})<br>` +
+      `v = (${fmt(vRect.x)}, ${fmt(vRect.y)}, ${fmt(vRect.z)})<br>` +
+      `n = (${fmt(aa)}, ${fmt(bb)}, ${fmt(cc)})<br>` +
+      `p₀ = (${fmt(p0.x)}, ${fmt(p0.y)}, ${fmt(p0.z)})<br>` +
+      `base = (${fmt(base.x)}, ${fmt(base.y)}, ${fmt(base.z)})<br><br>` +
+      `${fmt(aa)}x + ${fmt(bb)}y + ${fmt(cc)}z + ${fmt(dd)} = 0`;
+  }
+
+  const controlsInputs = [p0x, p0y, p0z];
+  for (const input of controlsInputs) {
+    input.addEventListener("input", updateScene);
+  }
+
+  function resize() {
+    const w = canvasHost.clientWidth || 900;
+    const h = canvasHost.clientHeight || (w * 0.4);
+    const aspect = w / h;
+    const viewHeight = 2.2;
+    camera.left = -viewHeight * aspect;
+    camera.right = viewHeight * aspect;
+    camera.top = viewHeight;
+    camera.bottom = -viewHeight;
+    camera.updateProjectionMatrix();
+    renderer.setSize(w, h, false);
+  }
+
+  window.addEventListener("resize", resize);
+  resize();
+  updateScene();
+
+  renderer.setAnimationLoop(() => {
+    renderer.render(scene, camera);
+  });
+
+  return wrapper;
+}
+```

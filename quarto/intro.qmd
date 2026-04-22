@@ -3,74 +3,93 @@
 ## Planes in 3D
 
 In $\mathbb{R}^3$, a plane is a collection of points lying on a flat surface. 
-If the plane passes through the origin, then it forms a subspace.
-
-Given two linearly independent vectors $u$ and $v$, we can linearly combine them to generate a plane $\Pi$ 
-$$
-\Pi = \{ x \mid x = \alpha u + \beta v,\; \alpha, \beta \in \mathbb{R} \}
-$$
-
-It thus holds that $\Pi = \text{span}\{u, v\}$, and the plane is oriented in the directions of $u$ and $v$.
-
-For any plane, there exists a normal vector $N$ such that for any point $p \in \Pi$:
-
-$$N \cdot p = 0$$
-
-This means that $N$ is orthogonal to every vector in $\Pi$, typically written as $N \perp \Pi$.
-In $\mathbb{R}^3$, since $p \in \text{span}\{u, v\}$, we can define the normal vector as $N = u \times v$.
-This way, by construction, $N$ is orthogonal to both $u$ and $v$.
-
-If we write $N = \begin{pmatrix} a \\ b \\ c \end{pmatrix}$ and $p = \begin{pmatrix} x \\ y \\ z \end{pmatrix}$, then the condition $N \cdot p = 0$ becomes:
-
-$$
-ax + by + cz = 0
-$$
-
-This is the Cartesian equation of the plane.
-
-We have one equation with three unknowns, so the solution space is two-dimensional.
-This is consistent with our initial description saying that $\Pi \in \text{span}\{u, v\}$.
-In particular, we can isolate $z$ in the cartesian form and re-write $p$, to prove that $u = \begin{pmatrix} 1 \\ 0 \\ -\frac{a}{c}\end{pmatrix}$ and $v = \begin{pmatrix} 0 \\ 1 \\ -\frac{b}{c}\end{pmatrix}$.
-
-
-## Uncentered 3D-planes 
-
-In the most general case, we can explicitly highlight that plane $\Pi$ passes through point $p_0$
+We can obtain a plane $\Pi$ as follows 
 
 $$
 \Pi = \{ x \mid x = p_0 + \alpha u + \beta v,\; \alpha, \beta \in \mathbb{R} \}
 $$
 
-If $p_0 \notin \text{span}\{u, v\}$, then we have a plane that does not cross the origin anymore.
+where $u, v \in \mathbb{R}^3$ are linearly independent vectors determining how $\Pi$ is oriented, and $p_0$ is a pass through point.
 
-To account for the existence of $p_0$ in our previous formulas, we only need to make an affine transformation.
-We will now have
+::: {#fig-plane-widget}
+{{< include _shared/plane_widget.qmd >}}
+Interactive 3D plane: rotate the direction vectors, move \(p_0\), and inspect the normal.
+:::
 
-$$N \cdot (p - p_0) = 0$$
+Depending on the values of $u$, $v$ and $p_0$, then $\Pi$ is either a subspace or an affine subspace.
 
-which highlights that $N$ is orthogonal to any direction contained in $\Pi$.
-Moreover, we now have $N \cdot P = N \cdot p_0$, so then the cartesian equation becomes
+- If $p_0 \in \text{span}\{u, v\}$, then $\exists \gamma, \omega \in \mathbb{R} \mid p_0 = \gamma u + \omega v$. 
+We would then be able to write
+$$
+\begin{align}
+x &= p_0 + \alpha u + \beta v \\
+& = \gamma u + \omega v + \alpha u + \beta v \\ 
+&= (\gamma + \alpha) u + (\omega + \beta) v \\ 
+&= \alpha^{\prime} u + \beta^{\prime} v  
+\end{align}
+$$
+and therefore $\Pi = \text{span}\{u, v\}$. As a consquence, $\Pi$ forms a subspace in these cases.
+
+- On the contrary, when $p_0 \notin \text{span}\{u, v\}$, then $\Pi$ $ does not pass through the origin.
+In this case, $\Pi$ is rather an affine subspace.
+
+For any plane, there exists a normal vector $N$ such that for any two points $p_A, p_B \in \Pi$:
+
+$$N \cdot (p_A - p_B) = 0$$
+
+This means that $N$ is orthogonal to every vector in $\Pi$, typically written as $N \perp \Pi$.
+In $\mathbb{R}^3$, we can obtain the normal vector as $N = u \times v$, which gives a vector that is orthogonal to both $u$ and $v$.
+
+We can further develop the previous formula
+
+$$N \cdot p_A = N \cdot p_B$$
+
+Since this holds $\forall p_A, p_B \in \Pi$, all points in the plane have the same value of $N \cdot p$. 
+Therefore, there exists a constant $d$ such that
+
+$$N \cdot p = d,\,\forall p \in \Pi$$
+
+Therefore, this equation provides a characterization of the plane.
+In other words, given any generic point $x \in \mathbb{R}^3$, if $N \cdot x = d$ then we know that $x \in \Pi$. 
+We can then write
 
 $$
-\Pi: ax + by + cz + d = 0
+\Pi = \{ x \in \mathbb{R}^3 \mid N \cdot x = d \}
 $$
 
-where $d = - N \cdot p_0$.
-As we will explore later, $d$ is proportional to the distance from the plane to the origin.
+If $N = \begin{pmatrix} a \\ b \\ c \end{pmatrix}$ then condition $N \cdot x = d$ becomes:
+
+$$
+\Pi: ax + by + cz = d
+$$
+
+This is the Cartesian equation of the plane.
+Since the equation holds for any point in the plane, we can define $d = N \cdot p_0$.
+It turns out that $d$ is proportional to the distance from the plane to the origin.
+
+In this system we have one equation and three unknowns, so the solution space is two-dimensional.
+This is consistent with our initial description saying that the solution was either a subspace formed by $\text{span}\{u, v\}$, or affine transformation of it.
+In particular, solving the homogenous system by isolating $z$ we can prove that $u = \begin{pmatrix} 1 \\ 0 \\ -\frac{a}{c}\end{pmatrix}$ and $v = \begin{pmatrix} 0 \\ 1 \\ -\frac{b}{c}\end{pmatrix}$.
+
 
 ## Hyperplanes
 
-In $\mathbb{R}^n$, we define an hyperplane following a similar idea:
+In $\mathbb{R}^n$, we define a hyperplane can be defined as:
 
 $$
-N \cdot (p - p_0) = 0
+\Pi = \{ x \in \mathbb{R}^n \mid N \cdot x = d \}
 $$
 
 We now have $n$ unknowns, and for $N = \begin{pmatrix}a_1 \\ \vdots \\ a_n \end{pmatrix}$ it holds that:
 
-$$a_1 x_1 + a_2 x_2 + \dots + a_n x_n + d = 0$$
+$$
+\sum_{i=1}^n a_i x_i = d
+$$
 
-Since one linear constraint is imposed, the hyperplane lives in a space of dimension n - 1.
-Similar to before, $N$ is orthogonal to the hyperplane.
+In particular, if $p_0 \in \Pi$, then $d = N \cdot p_0$.
+
+Since one linear constraint is imposed, the solution space, and therefore the hyperplane, have dimension $n - 1$.
+
+As before, $N$ is orthogonal to every direction contained in the hyperplane.
  
 $$\text{dist}(x, \Pi) = \frac{|N \cdot x + d|}{\|N\|}$$
